@@ -14,3 +14,15 @@ export interface WebSocketMessage {
     content: string;
   };
 }
+
+export interface UploadedFile {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+}
+
+export interface GitHubLink {
+  id: string;
+  url: string;
+}

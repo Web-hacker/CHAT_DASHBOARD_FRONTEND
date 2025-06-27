@@ -3,19 +3,29 @@ import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Github, Send, X } from 'lucide-react';
+import { Upload, Github, Send, X, Stop } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 interface ChatInputProps {
   onSendMessage: (content: string, attachments?: File[], githubUrl?: string) => void;
+  onStopChat: () => void;
+  onUpdatePrompt: (content: string) => void;
   disabled?: boolean;
+  isStreaming?: boolean;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled = false }) => {
+const ChatInput: React.FC<ChatInputProps> = ({ 
+  onSendMessage, 
+  onStopChat, 
+  onUpdatePrompt,
+  disabled = false,
+  isStreaming = false 
+}) => {
   const [message, setMessage] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
   const [githubUrl, setGithubUrl] = useState('');
   const [showGithubInput, setShowGithubInput] = useState(false);
+  const [isUpdatingPrompt, setIsUpdatingPrompt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -48,20 +58,26 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled = false }
       return;
     }
 
-    // Process attachments through API if any
-    if (attachments.length > 0) {
-      for (const file of attachments) {
-        await uploadDocument(file);
+    if (isUpdatingPrompt) {
+      // Update the last prompt
+      onUpdatePrompt(message.trim());
+      setIsUpdatingPrompt(false);
+    } else {
+      // Process attachments through API if any
+      if (attachments.length > 0) {
+        for (const file of attachments) {
+          await uploadDocument(file);
+        }
       }
-    }
 
-    // Process GitHub URL through API if provided
-    if (githubUrl.trim()) {
-      await processGithubUrl(githubUrl.trim());
-    }
+      // Process GitHub URL through API if provided
+      if (githubUrl.trim()) {
+        await processGithubUrl(githubUrl.trim());
+      }
 
-    // Send message
-    onSendMessage(message.trim(), attachments, githubUrl.trim() || undefined);
+      // Send message
+      onSendMessage(message.trim(), attachments, githubUrl.trim() || undefined);
+    }
 
     // Reset form
     setMessage('');
@@ -96,9 +112,37 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled = false }
     return (bytes / 1024).toFixed(1) + ' KB';
   };
 
+  const handleStopChat = () => {
+    onStopChat();
+  };
+
+  const handleUpdatePrompt = () => {
+    setIsUpdatingPrompt(true);
+    textareaRef.current?.focus();
+  };
+
   return (
     <div className="border-t border-gray-200 bg-white">
       <div className="max-w-4xl mx-auto p-6">
+        {/* Update prompt notification */}
+        {isUpdatingPrompt && (
+          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-yellow-800">
+                Update mode: Your next message will overwrite the previous prompt
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsUpdatingPrompt(false)}
+                className="text-yellow-600 hover:text-yellow-800"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Attachments display */}
         {attachments.length > 0 && (
           <div className="mb-4 flex flex-wrap gap-2">
@@ -154,7 +198,13 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled = false }
           <div className="flex-1">
             <Textarea
               ref={textareaRef}
-              placeholder={disabled ? "Connecting to server..." : "Type your message here... (Shift+Enter for new line)"}
+              placeholder={
+                disabled 
+                  ? "Connecting to server..." 
+                  : isUpdatingPrompt
+                  ? "Enter your updated prompt..."
+                  : "Type your message here... (Shift+Enter for new line)"
+              }
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyPress={handleKeyPress}
@@ -165,6 +215,33 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled = false }
 
           {/* Action buttons */}
           <div className="flex items-center space-x-2">
+            {/* Stop chat button (only show when streaming) */}
+            {isStreaming && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleStopChat}
+                className="hover:bg-red-50 border-red-200 text-red-600"
+              >
+                <Stop className="w-4 h-4" />
+              </Button>
+            )}
+
+            {/* Update prompt button (only show when not streaming and there are messages) */}
+            {!isStreaming && !isUpdatingPrompt && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleUpdatePrompt}
+                disabled={disabled}
+                className="hover:bg-yellow-50 border-yellow-200 text-yellow-600"
+              >
+                Update
+              </Button>
+            )}
+
             {/* File upload */}
             <input
               ref={fileInputRef}
@@ -210,7 +287,12 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled = false }
 
         {/* Helper text */}
         <div className="mt-2 text-xs text-gray-500 text-center">
-          {disabled ? 'Waiting for connection...' : 'Press Enter to send, Shift+Enter for new line'}
+          {disabled 
+            ? 'Waiting for connection...' 
+            : isUpdatingPrompt
+            ? 'Press Enter to update your prompt'
+            : 'Press Enter to send, Shift+Enter for new line'
+          }
         </div>
       </div>
     </div>
