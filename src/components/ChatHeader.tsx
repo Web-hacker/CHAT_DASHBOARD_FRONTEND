@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 interface ChatHeaderProps {
@@ -47,17 +46,6 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ connectionStatus }) => {
             {connectionStatus === 'connected' ? '●' : connectionStatus === 'connecting' ? '◐' : '○'}
           </span>
         </Badge>
-      </div>
-      
-      <div className="flex items-center space-x-1 sm:space-x-2 shrink-0">
-        <Button variant="outline" size="sm" className="text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9">
-          <span className="hidden sm:inline">Export Chat</span>
-          <span className="sm:hidden">Export</span>
-        </Button>
-        <Button variant="outline" size="sm" className="text-xs sm:text-sm px-2 sm:px-3 h-8 sm:h-9">
-          <span className="hidden sm:inline">Clear History</span>
-          <span className="sm:hidden">Clear</span>
-        </Button>
       </div>
     </div>
   );
