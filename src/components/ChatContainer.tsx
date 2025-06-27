@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
@@ -22,45 +21,15 @@ const ChatContainer = () => {
   const [currentStreamingMessageId, setCurrentStreamingMessageId] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
-  // WebSocket connection management
   useEffect(() => {
-    // TODO: Replace with your WebSocket URL
     const connectWebSocket = () => {
       console.log('Establishing WebSocket connection...');
       setConnectionStatus('connecting');
       
-      // Example WebSocket connection - replace with your backend URL
-      // wsRef.current = new WebSocket('ws://localhost:8080/chat');
-      
-      // Simulated connection for demo
       setTimeout(() => {
         setConnectionStatus('connected');
         console.log('WebSocket connected successfully');
       }, 1000);
-
-      /* 
-      WebSocket event handlers - uncomment when implementing
-      
-      wsRef.current.onopen = () => {
-        setConnectionStatus('connected');
-        console.log('WebSocket connected');
-      };
-
-      wsRef.current.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        handleWebSocketMessage(data);
-      };
-
-      wsRef.current.onclose = () => {
-        setConnectionStatus('disconnected');
-        console.log('WebSocket disconnected');
-      };
-
-      wsRef.current.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        setConnectionStatus('disconnected');
-      };
-      */
     };
 
     connectWebSocket();
@@ -72,7 +41,6 @@ const ChatContainer = () => {
     };
   }, []);
 
-  // Handle incoming WebSocket messages
   const handleWebSocketMessage = (data: any) => {
     console.log('Received WebSocket message:', data);
     
@@ -81,7 +49,6 @@ const ChatContainer = () => {
         setIsStreaming(true);
         const messageId = Date.now().toString();
         setCurrentStreamingMessageId(messageId);
-        // Add new AI message placeholder
         const newMessage: Message = {
           id: messageId,
           content: '',
@@ -93,7 +60,6 @@ const ChatContainer = () => {
         break;
 
       case 'STREAM_CHUNK':
-        // Update the streaming message with new content
         if (currentStreamingMessageId) {
           setMessages(prev => 
             prev.map(msg => 
@@ -108,7 +74,6 @@ const ChatContainer = () => {
       case 'STREAM_END':
         setIsStreaming(false);
         setCurrentStreamingMessageId(null);
-        // Mark message as complete
         if (currentStreamingMessageId) {
           setMessages(prev => 
             prev.map(msg => 
@@ -125,7 +90,6 @@ const ChatContainer = () => {
     }
   };
 
-  // Stop streaming chat
   const handleStopChat = () => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({
@@ -137,7 +101,6 @@ const ChatContainer = () => {
     setIsStreaming(false);
     setCurrentStreamingMessageId(null);
     
-    // Mark current streaming message as complete
     if (currentStreamingMessageId) {
       setMessages(prev => 
         prev.map(msg => 
@@ -149,11 +112,8 @@ const ChatContainer = () => {
     }
   };
 
-  // Update prompt (overwrite last AI response)
   const handleUpdatePrompt = (newContent: string) => {
-    // Find the last user message and update it
     setMessages(prev => {
-      // Use reverse approach instead of findLastIndex
       const reversedMessages = [...prev].reverse();
       const lastUserIndex = reversedMessages.findIndex(msg => msg.sender === 'user');
       
@@ -166,13 +126,11 @@ const ChatContainer = () => {
           timestamp: new Date(),
         };
         
-        // Remove all messages after the updated user message
         return updatedMessages.slice(0, actualIndex + 1);
       }
       return prev;
     });
 
-    // Send updated message via WebSocket
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       const payload = {
         type: 'UPDATE_PROMPT',
@@ -186,9 +144,7 @@ const ChatContainer = () => {
     }
   };
 
-  // Send message via WebSocket
   const handleSendMessage = (content: string, attachments?: File[], githubUrl?: string) => {
-    // Add uploaded files to state
     if (attachments && attachments.length > 0) {
       const newFiles: UploadedFile[] = attachments.map(file => ({
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
@@ -199,7 +155,6 @@ const ChatContainer = () => {
       setUploadedFiles(prev => [...prev, ...newFiles]);
     }
 
-    // Add GitHub link to state
     if (githubUrl) {
       const newGithubLink: GitHubLink = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
@@ -208,7 +163,6 @@ const ChatContainer = () => {
       setGithubLinks(prev => [...prev, newGithubLink]);
     }
 
-    // Add user message immediately
     const userMessage: Message = {
       id: Date.now().toString(),
       content,
@@ -218,7 +172,6 @@ const ChatContainer = () => {
 
     setMessages(prev => [...prev, userMessage]);
 
-    // Prepare WebSocket payload
     const payload = {
       type: 'USER_MESSAGE',
       content: {
@@ -227,14 +180,12 @@ const ChatContainer = () => {
       }
     };
 
-    // Send via WebSocket
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(payload));
       console.log('Sent message via WebSocket:', payload);
     } else {
       console.log('WebSocket not connected, message payload ready:', payload);
       
-      // Simulate AI response for demo
       setTimeout(() => {
         const aiResponse: Message = {
           id: (Date.now() + 1).toString(),
@@ -247,23 +198,20 @@ const ChatContainer = () => {
     }
   };
 
-  // Delete uploaded file
   const handleDeleteFile = (fileId: string) => {
     setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
     console.log('Deleted file:', fileId);
   };
 
-  // Delete GitHub link
   const handleDeleteGithubLink = (linkId: string) => {
     setGithubLinks(prev => prev.filter(link => link.id !== linkId));
     console.log('Deleted GitHub link:', linkId);
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-white">
+    <div className="flex-1 flex flex-col bg-white min-h-0">
       <ChatHeader connectionStatus={connectionStatus} />
       
-      {/* Uploaded Items Panel */}
       {(uploadedFiles.length > 0 || githubLinks.length > 0) && (
         <UploadedItemsPanel
           uploadedFiles={uploadedFiles}
