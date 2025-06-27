@@ -1,8 +1,5 @@
 
 import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Github, Upload } from 'lucide-react';
 import { Message } from '../types/chat';
 
 interface MessageBubbleProps {
@@ -38,42 +35,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isLast }) => {
               <span className="inline-block w-2 h-5 bg-current opacity-75 animate-pulse ml-1" />
             )}
           </div>
-
-          {/* Attachments */}
-          {message.attachments && message.attachments.length > 0 && (
-            <div className="mt-3 space-y-2">
-              {message.attachments.map((attachment) => (
-                <div
-                  key={attachment.id}
-                  className={`
-                    flex items-center space-x-2 p-2 rounded-lg
-                    ${isUser ? 'bg-white/20' : 'bg-white border border-gray-200'}
-                  `}
-                >
-                  <Upload className="w-4 h-4" />
-                  <span className="text-sm truncate">{attachment.name}</span>
-                  <Badge variant="secondary" className="text-xs">
-                    {(attachment.size / 1024).toFixed(1)} KB
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* GitHub URL */}
-          {message.githubUrl && (
-            <div className="mt-3">
-              <Button
-                variant={isUser ? "secondary" : "outline"}
-                size="sm"
-                className="flex items-center space-x-2"
-                onClick={() => window.open(message.githubUrl, '_blank')}
-              >
-                <Github className="w-4 h-4" />
-                <span>View Repository</span>
-              </Button>
-            </div>
-          )}
         </div>
 
         {/* Timestamp */}

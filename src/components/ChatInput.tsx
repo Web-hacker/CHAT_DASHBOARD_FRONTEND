@@ -19,19 +19,49 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled = false }
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // TODO: API integration point for document upload
+  const uploadDocument = async (file: File) => {
+    console.log('Uploading document:', file.name);
+    // Example API call structure:
+    // const formData = new FormData();
+    // formData.append('file', file);
+    // const response = await fetch('/api/upload', { method: 'POST', body: formData });
+    // return response.json();
+  };
+
+  // TODO: API integration point for GitHub link processing
+  const processGithubUrl = async (url: string) => {
+    console.log('Processing GitHub URL:', url);
+    // Example API call structure:
+    // const response = await fetch('/api/github', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify({ url })
+    // });
+    // return response.json();
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!message.trim() && attachments.length === 0 && !githubUrl.trim()) {
       return;
     }
 
-    // Send message with attachments and GitHub URL
-    onSendMessage(
-      message.trim(), 
-      attachments.length > 0 ? attachments : undefined,
-      githubUrl.trim() || undefined
-    );
+    // Process attachments through API if any
+    if (attachments.length > 0) {
+      for (const file of attachments) {
+        await uploadDocument(file);
+      }
+    }
+
+    // Process GitHub URL through API if provided
+    if (githubUrl.trim()) {
+      await processGithubUrl(githubUrl.trim());
+    }
+
+    // Send message
+    onSendMessage(message.trim(), attachments, githubUrl.trim() || undefined);
 
     // Reset form
     setMessage('');
@@ -49,7 +79,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled = false }
     const files = Array.from(e.target.files || []);
     setAttachments(prev => [...prev, ...files]);
     console.log('Files selected for upload:', files);
-    // TODO: Implement file preprocessing/validation here
   };
 
   const removeAttachment = (index: number) => {
