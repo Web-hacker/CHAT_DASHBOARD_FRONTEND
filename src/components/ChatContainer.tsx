@@ -19,6 +19,8 @@ const ChatContainer = () => {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [githubLinks, setGithubLinks] = useState<GitHubLink[]>([]);
   const [currentStreamingMessageId, setCurrentStreamingMessageId] = useState<string | null>(null);
+  const [isRewriteMode, setIsRewriteMode] = useState(false);
+  const [lastUserMessage, setLastUserMessage] = useState<string>('');
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -90,6 +92,35 @@ const ChatContainer = () => {
     }
   };
 
+  const handleStopAndRewrite = () => {
+    // Stop the current streaming
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({
+        type: 'STOP_STREAM'
+      }));
+      console.log('Sent stop stream request');
+    }
+    
+    setIsStreaming(false);
+    setCurrentStreamingMessageId(null);
+    
+    // Remove the streaming AI message
+    if (currentStreamingMessageId) {
+      setMessages(prev => prev.filter(msg => msg.id !== currentStreamingMessageId));
+    }
+    
+    // Find the last user message to allow rewriting
+    const reversedMessages = [...messages].reverse();
+    const lastUserIndex = reversedMessages.findIndex(msg => msg.sender === 'user');
+    
+    if (lastUserIndex !== -1) {
+      const actualIndex = messages.length - 1 - lastUserIndex;
+      const lastUserMsg = messages[actualIndex];
+      setLastUserMessage(lastUserMsg.content);
+      setIsRewriteMode(true);
+    }
+  };
+
   const handleStopChat = () => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({
@@ -142,6 +173,44 @@ const ChatContainer = () => {
       wsRef.current.send(JSON.stringify(payload));
       console.log('Sent updated prompt via WebSocket:', payload);
     }
+  };
+
+  const handleRewritePrompt = (newContent: string) => {
+    // Remove messages after the last user message
+    setMessages(prev => {
+      const reversedMessages = [...prev].reverse();
+      const lastUserIndex = reversedMessages.findIndex(msg => msg.sender === 'user');
+      
+      if (lastUserIndex !== -1) {
+        const actualIndex = prev.length - 1 - lastUserIndex;
+        const updatedMessages = [...prev];
+        updatedMessages[actualIndex] = {
+          ...updatedMessages[actualIndex],
+          content: newContent,
+          timestamp: new Date(),
+        };
+        
+        return updatedMessages.slice(0, actualIndex + 1);
+      }
+      return prev;
+    });
+
+    // Send the new prompt
+    const payload = {
+      type: 'USER_MESSAGE',
+      content: {
+        type: 'text',
+        content: newContent,
+      }
+    };
+
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify(payload));
+      console.log('Sent rewritten prompt via WebSocket:', payload);
+    }
+
+    setIsRewriteMode(false);
+    setLastUserMessage('');
   };
 
   const handleSendMessage = (content: string, attachments?: File[], githubUrl?: string) => {
@@ -225,9 +294,13 @@ const ChatContainer = () => {
       <ChatInput 
         onSendMessage={handleSendMessage}
         onStopChat={handleStopChat}
+        onStopAndRewrite={handleStopAndRewrite}
         onUpdatePrompt={handleUpdatePrompt}
+        onRewritePrompt={handleRewritePrompt}
         disabled={connectionStatus !== 'connected'}
         isStreaming={isStreaming}
+        isRewriteMode={isRewriteMode}
+        lastUserMessage={lastUserMessage}
       />
     </div>
   );
