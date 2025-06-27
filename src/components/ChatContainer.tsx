@@ -77,7 +77,7 @@ const ChatContainer = () => {
         setIsStreaming(true);
         // Add new AI message placeholder
         const newMessage: Message = {
-          id: Date.now().toString(),
+          id: data.messageId || Date.now().toString(),
           content: '',
           sender: 'ai',
           timestamp: new Date(),
@@ -89,9 +89,9 @@ const ChatContainer = () => {
       case 'STREAM_CHUNK':
         // Update the streaming message with new content
         setMessages(prev => 
-          prev.map((msg, index) => 
-            index === prev.length - 1 && msg.sender === 'ai' && msg.isStreaming
-              ? { ...msg, content: msg.content + data.content.content }
+          prev.map(msg => 
+            msg.id === data.messageId 
+              ? { ...msg, content: msg.content + data.chunk }
               : msg
           )
         );
@@ -101,8 +101,8 @@ const ChatContainer = () => {
         setIsStreaming(false);
         // Mark message as complete
         setMessages(prev => 
-          prev.map((msg, index) => 
-            index === prev.length - 1 && msg.sender === 'ai'
+          prev.map(msg => 
+            msg.id === data.messageId 
               ? { ...msg, isStreaming: false }
               : msg
           )
@@ -122,17 +122,25 @@ const ChatContainer = () => {
       content,
       sender: 'user',
       timestamp: new Date(),
+      attachments: attachments?.map(file => ({
+        id: Date.now().toString(),
+        name: file.name,
+        type: file.type,
+        size: file.size,
+      })),
+      githubUrl,
     };
 
     setMessages(prev => [...prev, userMessage]);
 
-    // Prepare WebSocket payload with new structure
+    // Prepare WebSocket payload
     const payload = {
       type: 'USER_MESSAGE',
-      content: {
-        type: 'text',
-        content: content,
-      }
+      content,
+      messageId: userMessage.id,
+      attachments: userMessage.attachments,
+      githubUrl,
+      timestamp: userMessage.timestamp.toISOString(),
     };
 
     // Send via WebSocket
@@ -156,7 +164,7 @@ const ChatContainer = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-white w-full">
+    <div className="flex-1 flex flex-col bg-white">
       <ChatHeader connectionStatus={connectionStatus} />
       <MessageList messages={messages} isStreaming={isStreaming} />
       <ChatInput onSendMessage={handleSendMessage} disabled={connectionStatus !== 'connected'} />
