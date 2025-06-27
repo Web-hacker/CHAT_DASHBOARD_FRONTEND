@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -37,19 +38,12 @@
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -99,5 +93,61 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Custom animations for chat interface */
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from { 
+      opacity: 0; 
+      transform: translateY(10px); 
+    }
+    to { 
+      opacity: 1; 
+      transform: translateY(0); 
+    }
+  }
+
+  .animate-typing {
+    animation: typing 1.5s infinite;
+  }
+
+  @keyframes typing {
+    0%, 60%, 100% { 
+      transform: translateY(0); 
+    }
+    30% { 
+      transform: translateY(-10px); 
+    }
+  }
+
+  /* Smooth scrolling for chat messages */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom gradient backgrounds */
+  .gradient-chat-bg {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .gradient-user-message {
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  }
+
+  /* Responsive design helpers */
+  @media (max-width: 768px) {
+    .mobile-hide {
+      display: none;
+    }
+    
+    .mobile-full {
+      width: 100% !important;
+    }
   }
 }
