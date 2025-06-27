@@ -3,7 +3,7 @@ import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Github, Send, X, Stop } from 'lucide-react';
+import { Upload, Github, Send, X, Square } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 interface ChatInputProps {
@@ -224,7 +224,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
                 onClick={handleStopChat}
                 className="hover:bg-red-50 border-red-200 text-red-600"
               >
-                <Stop className="w-4 h-4" />
+                <Square className="w-4 h-4" />
               </Button>
             )}
 

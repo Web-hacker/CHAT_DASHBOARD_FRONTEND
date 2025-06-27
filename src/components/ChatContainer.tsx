@@ -153,17 +153,21 @@ const ChatContainer = () => {
   const handleUpdatePrompt = (newContent: string) => {
     // Find the last user message and update it
     setMessages(prev => {
-      const lastUserIndex = prev.findLastIndex(msg => msg.sender === 'user');
+      // Use reverse approach instead of findLastIndex
+      const reversedMessages = [...prev].reverse();
+      const lastUserIndex = reversedMessages.findIndex(msg => msg.sender === 'user');
+      
       if (lastUserIndex !== -1) {
+        const actualIndex = prev.length - 1 - lastUserIndex;
         const updatedMessages = [...prev];
-        updatedMessages[lastUserIndex] = {
-          ...updatedMessages[lastUserIndex],
+        updatedMessages[actualIndex] = {
+          ...updatedMessages[actualIndex],
           content: newContent,
           timestamp: new Date(),
         };
         
         // Remove all messages after the updated user message
-        return updatedMessages.slice(0, lastUserIndex + 1);
+        return updatedMessages.slice(0, actualIndex + 1);
       }
       return prev;
     });
