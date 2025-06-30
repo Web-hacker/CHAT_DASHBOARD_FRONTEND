@@ -32,5 +32,6 @@ export interface UploadedFile {
 
 export interface GitHubLink {
   id: string;
-  url: string;
+  github_url: string;
+  branch: string;
 }

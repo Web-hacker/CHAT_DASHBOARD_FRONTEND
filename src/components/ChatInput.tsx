@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 interface ChatInputProps {
   onSendMessage: (content: string) => void;
   onUploadFiles: (attachments: File[]) => Promise<void>;
-  onSubmitGithubUrl: (githubUrl: string) => void;
+  onSubmitGithubUrl: (githubUrl: string, branch: string) => void;
   onStopChat: () => void;
   onStopAndRewrite: () => void;
   onUpdatePrompt: (content: string) => void;
@@ -35,6 +35,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
   const [githubUrl, setGithubUrl] = useState("");
+  const [githubbranch, setGithubbranch] = useState("");
   const [showGithubInput, setShowGithubInput] = useState(false);
   const [isUpdatingPrompt, setIsUpdatingPrompt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -85,8 +86,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   const handleGithubSubmit = () => {
     if (githubUrl.trim()) {
-      onSubmitGithubUrl(githubUrl.trim());
+      onSubmitGithubUrl(githubUrl.trim() , githubbranch?.trim() || 'main');
       setGithubUrl("");
+      setGithubbranch("");
       setShowGithubInput(false);
     }
   };
@@ -159,11 +161,18 @@ const ChatInput: React.FC<ChatInputProps> = ({
               onChange={(e) => setGithubUrl(e.target.value)}
               className="flex-1"
             />
+            <Input
+              type="string"
+              placeholder="branch"
+              value={githubbranch}
+              onChange={(e) => setGithubbranch(e.target.value)}
+              className="flex-1"
+            />
             <Button
               variant="outline"
               size="sm"
               onClick={handleGithubSubmit}
-              disabled={!githubUrl.trim()}
+              disabled={!githubUrl.trim() && !githubbranch.trim()}
             >
               Submit
             </Button>

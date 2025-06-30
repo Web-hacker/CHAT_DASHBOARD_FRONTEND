@@ -85,9 +85,9 @@ const UploadedItemsPanel: React.FC<UploadedItemsPanelProps> = ({
                 <Github className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
                 <span
                   className="truncate max-w-32 sm:max-w-48 md:max-w-64"
-                  title={link.url}
+                  title={link.github_url}
                 >
-                  {extractRepoName(link.url)}
+                  {extractRepoName(link.github_url)}
                 </span>
                 <Button
                   variant="ghost"
